@@ -146,13 +146,15 @@ function convertMatches(apiData) {
 
         var kickOff = m.utcDate ? new Date(m.utcDate) : null;
         var timeStr = '';
+        var matchDate = '';
         if (kickOff) {
-            var hh = String(kickOff.getHours()).padStart(2, '0');
-            var mm = String(kickOff.getMinutes()).padStart(2, '0');
+            // Converte pra UTC-3 (Brasil)
+            var brTime = new Date(kickOff.getTime() + (-3 - kickOff.getTimezoneOffset() / 60) * 3600000);
+            var hh = String(brTime.getHours()).padStart(2, '0');
+            var mm = String(brTime.getMinutes()).padStart(2, '0');
             timeStr = hh + ':' + mm;
+            matchDate = dateStr(brTime);
         }
-
-        var matchDate = m.utcDate ? dateStr(new Date(m.utcDate)) : '';
 
         var round = '';
         if (m.matchday) round = 'Rodada ' + m.matchday;
