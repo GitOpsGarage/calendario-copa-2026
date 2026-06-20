@@ -574,12 +574,41 @@ function loadFallback() {
             } else if (m.score && m.score.ht) {
                 score = { ht: m.score.ht };
             }
+
+            // Converte horario openfootball (ex: "18:00 UTC-4") pra BRT
+            var timeBR = '';
+            var dateBR = m.date || '';
+            if (m.time) {
+                var parts = m.time.split(' ');
+                var hm = parts[0].split(':');
+                var h = parseInt(hm[0], 10);
+                var min = parseInt(hm[1], 10);
+                var tz = parts[1] || '';
+                var off = 0;
+                if (tz.indexOf('UTC') !== -1) {
+                    off = parseInt(tz.replace('UTC', ''), 10) || 0;
+                }
+                // Horario do jogo em UTC
+                var utcH = h + off;
+                // Converte UTC pra BRT (UTC-3)
+                var brH = utcH - 3;
+                var brDay = 0;
+                if (brH < 0) { brH += 24; brDay = -1; }
+                if (brH >= 24) { brH -= 24; brDay = 1; }
+                timeBR = String(brH).padStart(2, '0') + ':' + String(min).padStart(2, '0');
+                if (brDay !== 0 && m.date) {
+                    var d = new Date(m.date + 'T12:00:00');
+                    d.setDate(d.getDate() + brDay);
+                    dateBR = dateStr(d);
+                }
+            }
+
             return {
                 team1: m.team1,
                 team2: m.team2,
                 date: m.date,
-                dateBR: m.date || '',
-                time: m.time || '',
+                dateBR: dateBR,
+                time: timeBR,
                 score: score,
                 round: m.round || '',
                 group: m.group || '',
