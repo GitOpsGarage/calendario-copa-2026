@@ -261,9 +261,14 @@ function statusInfo(match, type) {
     if (type === 'today' || type === 'live') {
         var t = parseTime(match);
         if (t) {
+            // Converte pra UTC-3
+            var tBR = new Date(t.getTime() + (-3 - t.getTimezoneOffset() / 60) * 3600000);
             var now = new Date();
             var end = new Date(t.getTime() + 120 * 60000);
-            if (t > now) return { cls: 'upcoming', text: t.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
+            var hh = String(tBR.getHours()).padStart(2, '0');
+            var mm = String(tBR.getMinutes()).padStart(2, '0');
+            var timeText = hh + ':' + mm;
+            if (t > now) return { cls: 'upcoming', text: timeText };
             if (now <= end) return { cls: 'live', text: 'AO VIVO' };
             if (!match.score) return { cls: 'finished', text: 'Encerrado' };
         }
