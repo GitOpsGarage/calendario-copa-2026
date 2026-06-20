@@ -4,6 +4,7 @@ var API_BASE = 'https://api.football-data.org/v4/competitions/WC/matches';
 var FALLBACK_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 var CACHE_KEY = 'copa2026_cache';
 var CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+var RATE_LIMIT_KEY = 'copa2026_ratelimit';
 
 var FLAGS = {
     'Mexico':'🇲🇽','South Africa':'🇿🇦','South Korea':'🇰🇷','Czech Republic':'🇨🇿',
@@ -195,7 +196,9 @@ function getCached() {
         var raw = localStorage.getItem(CACHE_KEY);
         if (!raw) return null;
         var cache = JSON.parse(raw);
-        if (Date.now() - cache.ts > CACHE_TTL) return null;
+        // Se estamos em rate limit, estende TTL pra 15min
+        var ttl = isRateLimited() ? 15 * 60 * 1000 : CACHE_TTL;
+        if (Date.now() - cache.ts > ttl) return null;
         return cache.data;
     } catch (e) { return null; }
 }
@@ -203,6 +206,20 @@ function getCached() {
 function setCache(data) {
     try {
         localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch (e) {}
+}
+
+function isRateLimited() {
+    try {
+        var rl = localStorage.getItem(RATE_LIMIT_KEY);
+        if (!rl) return false;
+        return Date.now() - parseInt(rl, 10) < 60000; // 1 min cooldown
+    } catch (e) { return false; }
+}
+
+function markRateLimited() {
+    try {
+        localStorage.setItem(RATE_LIMIT_KEY, String(Date.now()));
     } catch (e) {}
 }
 
@@ -453,14 +470,52 @@ function loadMatches() {
     if (cached) {
         allMatches = cached;
         renderAll();
-        return; // cache valido, nao faz request
+        // Se tem cache valido e NAO esta em rate limit, tenta atualizar em background
+        if (!isRateLimited()) {
+            refreshInBackground();
+        }
+        return;
     }
 
-    // 2. Sem cache ou expirado → fetch da API football-data.org
+    // 2. Sem cache → tenta API, senao fallback
+    if (isRateLimited()) {
+        loadFallback();
+        return;
+    }
+
+    fetchAPI();
+}
+
+function refreshInBackground() {
     fetch(API_BASE, {
         headers: { 'X-Auth-Token': API_KEY }
     })
     .then(function(r) {
+        if (r.status === 429) {
+            markRateLimited();
+            return null;
+        }
+        if (!r.ok) throw new Error('API ' + r.status);
+        return r.json();
+    })
+    .then(function(data) {
+        if (!data) return;
+        allMatches = convertMatches(data);
+        setCache(allMatches);
+        renderAll();
+    })
+    .catch(function() {}); // silencioso, cache ja ta mostrando dados
+}
+
+function fetchAPI() {
+    fetch(API_BASE, {
+        headers: { 'X-Auth-Token': API_KEY }
+    })
+    .then(function(r) {
+        if (r.status === 429) {
+            markRateLimited();
+            throw new Error('Rate limited');
+        }
         if (!r.ok) throw new Error('API ' + r.status);
         return r.json();
     })
@@ -471,7 +526,6 @@ function loadMatches() {
     })
     .catch(function(err) {
         console.warn('football-data.org falhou, tentando fallback:', err);
-        // 3. Fallback: openfootball JSON (sem CORS, funciona em file://)
         loadFallback();
     });
 }
