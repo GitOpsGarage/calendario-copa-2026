@@ -5,6 +5,7 @@ var FALLBACK_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json
 var CACHE_KEY = 'copa2026_cache';
 var CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 var RATE_LIMIT_KEY = 'copa2026_ratelimit';
+var TZ_OFFSET = -3; // UTC-3 Brasil
 
 var FLAGS = {
     'Mexico':'🇲🇽','South Africa':'🇿🇦','South Korea':'🇰🇷','Czech Republic':'🇨🇿',
@@ -112,6 +113,17 @@ var teamPopulated = false;
 function pt(name) { return PT[name] || name; }
 function flag(name) { return FLAGS[name] || '🏳️'; }
 
+function utcToBR(utcDateStr) {
+    var d = new Date(utcDateStr);
+    var utc = d.getTime() + d.getTimezoneOffset() * 60000;
+    var br = new Date(utc + TZ_OFFSET * 3600000);
+    return br;
+}
+
+function fmtBRDate(d) {
+    return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+}
+
 function resolveName(apiName) {
     return NAME_MAP[apiName] || apiName;
 }
@@ -147,13 +159,14 @@ function convertMatches(apiData) {
         var kickOff = m.utcDate ? new Date(m.utcDate) : null;
         var timeStr = '';
         var matchDate = '';
+        var matchDateBR = '';
         if (kickOff) {
-            // Converte pra UTC-3 (Brasil)
-            var brTime = new Date(kickOff.getTime() + (-3 - kickOff.getTimezoneOffset() / 60) * 3600000);
+            var brTime = utcToBR(m.utcDate);
             var hh = String(brTime.getHours()).padStart(2, '0');
             var mm = String(brTime.getMinutes()).padStart(2, '0');
             timeStr = hh + ':' + mm;
             matchDate = dateStr(brTime);
+            matchDateBR = fmtBRDate(brTime);
         }
 
         var round = '';
@@ -180,6 +193,7 @@ function convertMatches(apiData) {
             team1: t1,
             team2: t2,
             date: matchDate,
+            dateBR: matchDateBR,
             time: timeStr,
             score: score,
             round: round,
@@ -261,14 +275,13 @@ function statusInfo(match, type) {
     if (type === 'today' || type === 'live') {
         var t = parseTime(match);
         if (t) {
-            // Converte pra UTC-3
-            var tBR = new Date(t.getTime() + (-3 - t.getTimezoneOffset() / 60) * 3600000);
-            var now = new Date();
-            var end = new Date(t.getTime() + 120 * 60000);
-            var hh = String(tBR.getHours()).padStart(2, '0');
-            var mm = String(tBR.getMinutes()).padStart(2, '0');
+            var brTime = match.utcDate ? utcToBR(match.utcDate) : t;
+            var hh = String(brTime.getHours()).padStart(2, '0');
+            var mm = String(brTime.getMinutes()).padStart(2, '0');
             var timeText = hh + ':' + mm;
+            var now = new Date();
             if (t > now) return { cls: 'upcoming', text: timeText };
+            var end = new Date(t.getTime() + 120 * 60000);
             if (now <= end) return { cls: 'live', text: 'AO VIVO' };
             if (!match.score) return { cls: 'finished', text: 'Encerrado' };
         }
@@ -281,7 +294,8 @@ function matchCard(match, type) {
     var live = type === 'live' || s.cls === 'live';
     var h = '<div class="match-card ' + s.cls + (live ? ' match-card-live' : '') + '">';
     if (live) h += '<div class="live-indicator"><span class="live-dot"></span> AO VIVO</div>';
-    h += '<div class="match-info"><span class="match-round">' + (match.round || 'Fase de Grupos') + '</span>';
+    h += '<div class="match-info">';
+    h += '<span class="match-round">' + (match.dateBR || match.date || '') + ' · ' + (match.round || 'Fase de Grupos') + '</span>';
     if (!live) h += '<span class="match-status ' + s.cls + '">' + s.text + '</span>';
     h += '</div>';
     h += '<div class="match-teams">';
@@ -564,6 +578,7 @@ function loadFallback() {
                 team1: m.team1,
                 team2: m.team2,
                 date: m.date,
+                dateBR: m.date || '',
                 time: m.time || '',
                 score: score,
                 round: m.round || '',
