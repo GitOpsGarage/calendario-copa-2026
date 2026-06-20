@@ -296,6 +296,17 @@ function noGames(msg) {
     return '<div class="no-matches"><div class="icon">📅</div><p>' + msg + '</p></div>';
 }
 
+function sortByTime(matches) {
+    return matches.sort(function(a, b) {
+        var aLive = isLive(a) ? 0 : 1;
+        var bLive = isLive(b) ? 0 : 1;
+        if (aLive !== bLive) return aLive - bLive;
+        var ta = a.utcDate ? new Date(a.utcDate).getTime() : (parseTime(a) ? parseTime(a).getTime() : 0);
+        var tb = b.utcDate ? new Date(b.utcDate).getTime() : (parseTime(b) ? parseTime(b).getTime() : 0);
+        return ta - tb;
+    });
+}
+
 function renderAll() {
     renderLiveSection();
     renderCalendarGrid();
@@ -322,13 +333,13 @@ function renderLiveSection() {
     }
 
     if (notLive.length > 0) {
-        renderInto('live-matches', notLive.map(function(m) { return matchCard(m, 'today'); }).join(''));
+        renderInto('live-matches', sortByTime(notLive).map(function(m) { return matchCard(m, 'today'); }).join(''));
     } else {
         renderInto('live-matches', noGames('Nenhum jogo hoje'));
     }
 
     if (yestAll.length > 0) {
-        renderInto('yesterday-matches', yestAll.map(function(m) { return matchCard(m, 'yesterday'); }).join(''));
+        renderInto('yesterday-matches', sortByTime(yestAll).map(function(m) { return matchCard(m, 'yesterday'); }).join(''));
     } else {
         renderInto('yesterday-matches', noGames('Nenhum jogo ontem'));
     }
@@ -376,7 +387,7 @@ function renderCalendarGrid() {
 
 function renderCalendarMatches() {
     var sel = dateStr(currentDate);
-    var matches = allMatches.filter(function(m) { return m.date === sel; });
+    var matches = sortByTime(allMatches.filter(function(m) { return m.date === sel; }));
     var label = document.getElementById('calendar-selected-date');
     if (label) label.textContent = fmtDate(currentDate);
     if (matches.length === 0) {
@@ -444,11 +455,11 @@ function renderTeamMatches(team) {
     var html = '';
     if (past.length > 0) {
         html += '<h3 style="margin:1rem 0 0.5rem;color:var(--text-muted)">Jogos Anteriores</h3>';
-        html += past.map(function(m) { return matchCard(m, 'past'); }).join('');
+        html += sortByTime(past).map(function(m) { return matchCard(m, 'past'); }).join('');
     }
     if (future.length > 0) {
         html += '<h3 style="margin:1rem 0 0.5rem;color:var(--text-muted)">Próximos Jogos</h3>';
-        html += future.map(function(m) { return matchCard(m, 'future'); }).join('');
+        html += sortByTime(future).map(function(m) { return matchCard(m, 'future'); }).join('');
     }
     container.innerHTML = html || noGames('Nenhum jogo encontrado');
 }
