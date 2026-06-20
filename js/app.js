@@ -1,6 +1,7 @@
 // Copa 2026 - App
 var API_KEY = 'REDACTED';
 var API_BASE = 'https://api.football-data.org/v4/competitions/WC/matches';
+var FALLBACK_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 var CACHE_KEY = 'copa2026_cache';
 var CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
@@ -455,7 +456,7 @@ function loadMatches() {
         return; // cache valido, nao faz request
     }
 
-    // 2. Sem cache ou expirado → fetch da API
+    // 2. Sem cache ou expirado → fetch da API football-data.org
     fetch(API_BASE, {
         headers: { 'X-Auth-Token': API_KEY }
     })
@@ -469,8 +470,42 @@ function loadMatches() {
         renderAll();
     })
     .catch(function(err) {
-        console.error('Erro ao buscar jogos:', err);
-        // Se deu erro e nao tem cache, mostra erro
+        console.warn('football-data.org falhou, tentando fallback:', err);
+        // 3. Fallback: openfootball JSON (sem CORS, funciona em file://)
+        loadFallback();
+    });
+}
+
+function loadFallback() {
+    fetch(FALLBACK_URL + '?_t=' + Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var raw = data.matches || [];
+        allMatches = raw.map(function(m) {
+            var score = null;
+            if (m.score && m.score.ft) {
+                score = { ft: m.score.ft };
+            } else if (m.score && m.score.ht) {
+                score = { ht: m.score.ht };
+            }
+            return {
+                team1: m.team1,
+                team2: m.team2,
+                date: m.date,
+                time: m.time || '',
+                score: score,
+                round: m.round || '',
+                group: m.group || '',
+                ground: m.ground || '',
+                status: score && score.ft ? 'finished' : 'upcoming',
+                utcDate: null
+            };
+        });
+        setCache(allMatches);
+        renderAll();
+    })
+    .catch(function(err2) {
+        console.error('Fallback tambem falhou:', err2);
         if (allMatches.length === 0) {
             renderInto('live-matches', '<div class="no-matches"><div class="icon">⚠️</div><p>Erro ao carregar dados. Tente novamente.</p></div>');
         }
