@@ -1,5 +1,8 @@
 // Copa 2026 - App
-var API_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+var API_KEY = 'REDACTED';
+var API_BASE = 'https://api.football-data.org/v4/competitions/WC/matches';
+var CACHE_KEY = 'copa2026_cache';
+var CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 var FLAGS = {
     'Mexico':'🇲🇽','South Africa':'🇿🇦','South Korea':'🇰🇷','Czech Republic':'🇨🇿',
@@ -55,6 +58,49 @@ var PT = {
     'DR Congo':'RD Congo','Cape Verde':'Cabo Verde'
 };
 
+// Mapa de nomes ingles API football-data → nossos nomes
+var NAME_MAP = {
+    'México':'Mexico','South Africa':'South Africa','South Korea':'South Korea',
+    'Czechia':'Czech Republic','Czech Republic':'Czech Republic',
+    'Argentina':'Argentina','Canada':'Canada','Morocco':'Morocco','Croatia':'Croatia',
+    'Brazil':'Brazil','Serbia':'Serbia','Germany':'Germany','Japan':'Japan',
+    'Spain':'Spain','Colombia':'Colombia','France':'France','Australia':'Australia',
+    'England':'England','Italy':'Italy','Netherlands':'Netherlands','USA':'USA',
+    'United States':'USA','United States of America':'USA',
+    'Portugal':'Portugal','Belgium':'Belgium','Uruguay':'Uruguay','Switzerland':'Switzerland',
+    'Ecuador':'Ecuador','Senegal':'Senegal','Poland':'Poland','Saudi Arabia':'Saudi Arabia',
+    'Tunisia':'Tunisia','Denmark':'Denmark','Wales':'Wales',
+    'Iran':'Iran','Qatar':'Qatar','Cameroon':'Cameroon','Ghana':'Ghana',
+    'Costa Rica':'Costa Rica','Peru':'Peru','Iceland':'Iceland','Panama':'Panama',
+    'Egypt':'Egypt','Nigeria':'Nigeria',
+    'Algeria':'Algeria','Honduras':'Honduras','Jamaica':'Jamaica','Paraguay':'Paraguay',
+    'Chile':'Chile','Bolivia':'Bolivia','Venezuela':'Venezuela',
+    'Iraq':'Iraq','Thailand':'Thailand',
+    'Vietnam':'Vietnam','Indonesia':'Indonesia','Malaysia':'Malaysia',
+    'New Zealand':'New Zealand','Guatemala':'Guatemala',
+    'El Salvador':'El Salvador','Haiti':'Haiti','Cuba':'Cuba',
+    'Scotland':'Scotland','Türkiye':'Turkey','Turkey':'Turkey',
+    'Norway':'Norway','Sweden':'Sweden',
+    "Côte d'Ivoire":'Ivory Coast','Ivory Coast':'Ivory Coast',
+    'Austria':'Austria','Jordan':'Jordan',
+    'Bosnia and Herzegovina':'Bosnia & Herzegovina','Bosnia & Herzegovina':'Bosnia & Herzegovina',
+    'Uzbekistan':'Uzbekistan','DR Congo':'DR Congo',
+    'Cape Verde':'Cape Verde','Cabo Verde':'Cape Verde',
+    'Trinidad and Tobago':'Trinidad and Tobago'
+};
+
+// Status da API football-data → nosso tipo
+var STATUS_MAP = {
+    'FINISHED': 'finished',
+    'IN_PLAY': 'live',
+    'PAUSED': 'live',
+    'TIMED': 'upcoming',
+    'SCHEDULED': 'upcoming',
+    'POSTPONED': 'upcoming',
+    'CANCELLED': 'cancelled',
+    'AWARDED': 'finished'
+};
+
 var allMatches = [];
 var currentDate = new Date();
 var calMonth = currentDate.getMonth();
@@ -63,6 +109,10 @@ var teamPopulated = false;
 
 function pt(name) { return PT[name] || name; }
 function flag(name) { return FLAGS[name] || '🏳️'; }
+
+function resolveName(apiName) {
+    return NAME_MAP[apiName] || apiName;
+}
 
 function dateStr(d) {
     return d.getFullYear() + '-' +
@@ -74,30 +124,101 @@ function fmtDate(d) {
     return d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function parseTime(match) {
-    if (!match.time) return null;
-    var parts = match.time.split(' ');
-    var hm = parts[0].split(':');
-    var h = parseInt(hm[0], 10);
-    var m = parseInt(hm[1], 10);
-    var tz = parts[1] || '';
-    var d = new Date(match.date + 'T12:00:00');
-    if (tz.indexOf('UTC') !== -1) {
-        var off = parseInt(tz.replace('UTC', ''), 10) || 0;
-        d.setUTCHours(h - off, m, 0);
-    } else {
-        d.setHours(h, m, 0);
+// Converte resposta da API football-data pro nosso formato
+function convertMatches(apiData) {
+    var result = [];
+    var matches = apiData.matches || [];
+    for (var i = 0; i < matches.length; i++) {
+        var m = matches[i];
+        var t1 = resolveName(m.homeTeam.name);
+        var t2 = resolveName(m.awayTeam.name);
+        var apiStatus = m.status;
+        var myStatus = STATUS_MAP[apiStatus] || 'upcoming';
+
+        var score = null;
+        if (m.score && m.score.fullTime && m.score.fullTime.homeTeam !== null) {
+            score = { ft: [m.score.fullTime.homeTeam, m.score.fullTime.awayTeam] };
+        } else if (m.score && m.score.halfTime && m.score.halfTime.homeTeam !== null) {
+            score = { ht: [m.score.halfTime.homeTeam, m.score.halfTime.awayTeam] };
+        }
+
+        var kickOff = m.utcDate ? new Date(m.utcDate) : null;
+        var timeStr = '';
+        if (kickOff) {
+            var hh = String(kickOff.getHours()).padStart(2, '0');
+            var mm = String(kickOff.getMinutes()).padStart(2, '0');
+            timeStr = hh + ':' + mm;
+        }
+
+        var matchDate = m.utcDate ? dateStr(new Date(m.utcDate)) : '';
+
+        var round = '';
+        if (m.matchday) round = 'Rodada ' + m.matchday;
+        if (m.stage === 'FINAL') round = 'Final';
+        if (m.stage === 'SEMI_FINALS') round = 'Semifinal';
+        if (m.stage === 'QUARTER_FINALS') round = 'Quartas de Final';
+        if (m.stage === 'ROUND_OF_16') round = 'Oitavas de Final';
+        if (m.stage === 'THIRD_PLACE') round = 'Disputa de 3º Lugar';
+
+        var group = '';
+        if (m.group) {
+            var gn = m.group.name || m.group;
+            if (typeof gn === 'string' && gn.indexOf('GROUP_') !== -1) {
+                group = 'Grupo ' + gn.replace('GROUP_', '');
+            } else if (typeof gn === 'string') {
+                group = gn;
+            }
+        }
+
+        var venue = m.venue || '';
+
+        result.push({
+            team1: t1,
+            team2: t2,
+            date: matchDate,
+            time: timeStr,
+            score: score,
+            round: round,
+            group: group,
+            ground: venue,
+            status: myStatus,
+            utcDate: m.utcDate
+        });
     }
+    return result;
+}
+
+// Cache
+function getCached() {
+    try {
+        var raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        var cache = JSON.parse(raw);
+        if (Date.now() - cache.ts > CACHE_TTL) return null;
+        return cache.data;
+    } catch (e) { return null; }
+}
+
+function setCache(data) {
+    try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch (e) {}
+}
+
+// Funcoes de status/placar (adaptadas pro formato novo)
+function parseTime(match) {
+    if (match.utcDate) return new Date(match.utcDate);
+    if (!match.time) return null;
+    var parts = match.time.split(':');
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    var d = new Date(match.date + 'T12:00:00');
+    d.setHours(h, m, 0);
     return d;
 }
 
 function isLive(match) {
-    if (match.score && match.score.ft) return false;
-    var t = parseTime(match);
-    if (!t) return false;
-    var now = new Date();
-    var end = new Date(t.getTime() + 120 * 60000);
-    return t <= now && now <= end;
+    return match.status === 'live';
 }
 
 function scoreHTML(match, type) {
@@ -114,17 +235,18 @@ function scoreHTML(match, type) {
 }
 
 function statusInfo(match, type) {
-    if (match.score && match.score.ft) {
-        return { cls: 'finished', text: 'Encerrado' };
-    }
+    if (match.status === 'finished') return { cls: 'finished', text: 'Encerrado' };
+    if (match.status === 'live') return { cls: 'live', text: 'AO VIVO' };
+    if (match.status === 'cancelled') return { cls: 'finished', text: 'Cancelado' };
     if (type === 'today' || type === 'live') {
         var t = parseTime(match);
-        if (!t) return { cls: 'upcoming', text: 'A definir' };
-        var now = new Date();
-        var end = new Date(t.getTime() + 120 * 60000);
-        if (t > now) return { cls: 'upcoming', text: t.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
-        if (now <= end) return { cls: 'live', text: 'AO VIVO' };
-        return { cls: 'finished', text: 'Encerrado' };
+        if (t) {
+            var now = new Date();
+            var end = new Date(t.getTime() + 120 * 60000);
+            if (t > now) return { cls: 'upcoming', text: t.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
+            if (now <= end) return { cls: 'live', text: 'AO VIVO' };
+            if (!match.score) return { cls: 'finished', text: 'Encerrado' };
+        }
     }
     return { cls: 'upcoming', text: match.time || 'A definir' };
 }
@@ -154,6 +276,15 @@ function renderInto(id, html) {
 
 function noGames(msg) {
     return '<div class="no-matches"><div class="icon">📅</div><p>' + msg + '</p></div>';
+}
+
+function renderAll() {
+    renderLiveSection();
+    renderCalendarGrid();
+    if (!teamPopulated) {
+        populateTeamSelect();
+        teamPopulated = true;
+    }
 }
 
 function renderLiveSection() {
@@ -316,21 +447,34 @@ function switchTab(name) {
 }
 
 function loadMatches() {
-    fetch(API_URL + '?_t=' + Date.now())
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            allMatches = data.matches || [];
-            renderLiveSection();
-            renderCalendarGrid();
-            if (!teamPopulated) {
-                populateTeamSelect();
-                teamPopulated = true;
-            }
-        })
-        .catch(function(err) {
-            console.error('Erro ao buscar jogos:', err);
-            renderInto('live-matches', '<div class="no-matches"><div class="icon">⚠️</div><p>Erro ao carregar dados</p></div>');
-        });
+    // 1. Mostra cache imediatamente (zero delay)
+    var cached = getCached();
+    if (cached) {
+        allMatches = cached;
+        renderAll();
+        return; // cache valido, nao faz request
+    }
+
+    // 2. Sem cache ou expirado → fetch da API
+    fetch(API_BASE, {
+        headers: { 'X-Auth-Token': API_KEY }
+    })
+    .then(function(r) {
+        if (!r.ok) throw new Error('API ' + r.status);
+        return r.json();
+    })
+    .then(function(data) {
+        allMatches = convertMatches(data);
+        setCache(allMatches);
+        renderAll();
+    })
+    .catch(function(err) {
+        console.error('Erro ao buscar jogos:', err);
+        // Se deu erro e nao tem cache, mostra erro
+        if (allMatches.length === 0) {
+            renderInto('live-matches', '<div class="no-matches"><div class="icon">⚠️</div><p>Erro ao carregar dados. Tente novamente.</p></div>');
+        }
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -352,5 +496,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (teamSel) teamSel.addEventListener('change', function() { renderTeamMatches(this.value); });
 
     loadMatches();
-    setInterval(loadMatches, 30000);
+    // Refresh a cada 5min (respeita limite 10/min)
+    setInterval(loadMatches, CACHE_TTL);
 });
