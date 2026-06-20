@@ -588,10 +588,10 @@ function loadFallback() {
                 if (tz.indexOf('UTC') !== -1) {
                     off = parseInt(tz.replace('UTC', ''), 10) || 0;
                 }
-                // Horario do jogo em UTC
-                var utcH = h + off;
+                // Horario do jogo em UTC: local_time - offset
+                var utcH = h - off;
                 // Converte UTC pra BRT (UTC-3)
-                var brH = utcH - 3;
+                var brH = utcH + TZ_OFFSET;
                 var brDay = 0;
                 if (brH < 0) { brH += 24; brDay = -1; }
                 if (brH >= 24) { brH -= 24; brDay = 1; }
