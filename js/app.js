@@ -268,6 +268,14 @@ function scoreHTML(match, type) {
     return '<span class="separator">vs</span>';
 }
 
+function getMatchTimeBR(match) {
+    if (match.utcDate) {
+        var brTime = utcToBR(match.utcDate);
+        return String(brTime.getHours()).padStart(2, '0') + ':' + String(brTime.getMinutes()).padStart(2, '0');
+    }
+    return match.time || '';
+}
+
 function statusInfo(match, type) {
     if (match.status === 'finished') return { cls: 'finished', text: 'Encerrado' };
     if (match.status === 'live') return { cls: 'live', text: 'AO VIVO' };
@@ -275,18 +283,14 @@ function statusInfo(match, type) {
     if (type === 'today' || type === 'live') {
         var t = parseTime(match);
         if (t) {
-            var brTime = match.utcDate ? utcToBR(match.utcDate) : t;
-            var hh = String(brTime.getHours()).padStart(2, '0');
-            var mm = String(brTime.getMinutes()).padStart(2, '0');
-            var timeText = hh + ':' + mm;
             var now = new Date();
-            if (t > now) return { cls: 'upcoming', text: timeText };
             var end = new Date(t.getTime() + 120 * 60000);
+            if (t > now) return { cls: 'upcoming', text: getMatchTimeBR(match) };
             if (now <= end) return { cls: 'live', text: 'AO VIVO' };
             if (!match.score) return { cls: 'finished', text: 'Encerrado' };
         }
     }
-    return { cls: 'upcoming', text: match.time || 'A definir' };
+    return { cls: 'upcoming', text: getMatchTimeBR(match) || 'A definir' };
 }
 
 function matchCard(match, type) {
