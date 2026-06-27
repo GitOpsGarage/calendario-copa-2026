@@ -1,6 +1,5 @@
 // Copa 2026 - App
-var API_KEY = 'REDACTED';
-var API_BASE = 'https://api.football-data.org/v4/competitions/WC/matches';
+var API_BASE = 'https://copa-2026.gitopsgarage.workers.dev';
 var FALLBACK_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 var CACHE_KEY = 'copa2026_cache';
 var CACHE_TTL = 5 * 60 * 1000; // 5 minutos
@@ -523,9 +522,7 @@ function loadMatches() {
 }
 
 function refreshInBackground() {
-    fetch(API_BASE, {
-        headers: { 'X-Auth-Token': API_KEY }
-    })
+    fetch(API_BASE)
     .then(function(r) {
         if (r.status === 429) {
             markRateLimited();
@@ -544,9 +541,7 @@ function refreshInBackground() {
 }
 
 function fetchAPI() {
-    fetch(API_BASE, {
-        headers: { 'X-Auth-Token': API_KEY }
-    })
+    fetch(API_BASE)
     .then(function(r) {
         if (r.status === 429) {
             markRateLimited();
