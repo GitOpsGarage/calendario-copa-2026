@@ -551,6 +551,7 @@ function fetchAPI() {
         return r.json();
     })
     .then(function(data) {
+        console.log('API response sample:', JSON.stringify(data.matches && data.matches[0]));
         allMatches = convertMatches(data);
         setCache(allMatches);
         renderAll();
