@@ -149,10 +149,10 @@ function convertMatches(apiData) {
         var myStatus = STATUS_MAP[apiStatus] || 'upcoming';
 
         var score = null;
-        if (m.score && m.score.fullTime && m.score.fullTime.homeTeam !== null) {
-            score = { ft: [m.score.fullTime.homeTeam, m.score.fullTime.awayTeam] };
-        } else if (m.score && m.score.halfTime && m.score.halfTime.homeTeam !== null) {
-            score = { ht: [m.score.halfTime.homeTeam, m.score.halfTime.awayTeam] };
+        if (m.score && m.score.fullTime && m.score.fullTime.home !== null) {
+            score = { ft: [m.score.fullTime.home, m.score.fullTime.away] };
+        } else if (m.score && m.score.halfTime && m.score.halfTime.home !== null) {
+            score = { ht: [m.score.halfTime.home, m.score.halfTime.away] };
         }
 
         var kickOff = m.utcDate ? new Date(m.utcDate) : null;
