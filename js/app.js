@@ -169,11 +169,13 @@ function convertMatches(apiData) {
         }
 
         var round = '';
-        if (m.matchday) round = 'Rodada ' + m.matchday;
-        if (m.stage === 'FINAL') round = 'Final';
-        if (m.stage === 'SEMI_FINALS') round = 'Semifinal';
+        if (m.stage === 'GROUP_STAGE' && m.matchday) round = 'Rodada ' + m.matchday;
+        if (m.stage === 'GROUP_STAGE' && !m.matchday) round = 'Fase de Grupos';
+        if (m.stage === 'LAST_32') round = 'Rodada de 32';
+        if (m.stage === 'LAST_16') round = 'Oitavas de Final';
         if (m.stage === 'QUARTER_FINALS') round = 'Quartas de Final';
-        if (m.stage === 'ROUND_OF_16') round = 'Oitavas de Final';
+        if (m.stage === 'SEMI_FINALS') round = 'Semifinal';
+        if (m.stage === 'FINAL') round = 'Final';
         if (m.stage === 'THIRD_PLACE') round = 'Disputa de 3º Lugar';
 
         var group = '';
@@ -298,7 +300,7 @@ function matchCard(match, type) {
     var h = '<div class="match-card ' + s.cls + (live ? ' match-card-live' : '') + '">';
     if (live) h += '<div class="live-indicator"><span class="live-dot"></span> AO VIVO</div>';
     h += '<div class="match-info">';
-    h += '<span class="match-round">' + (match.dateBR || match.date || '') + ' · ' + (match.round || 'Fase de Grupos') + '</span>';
+    h += '<span class="match-round">' + (match.dateBR || match.date || '') + (match.round ? ' · ' + match.round : '') + '</span>';
     if (!live) h += '<span class="match-status ' + s.cls + '">' + s.text + '</span>';
     h += '</div>';
     h += '<div class="match-teams">';
