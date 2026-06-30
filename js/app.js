@@ -171,7 +171,7 @@ function convertMatches(apiData) {
         var round = '';
         if (m.stage === 'GROUP_STAGE' && m.matchday) round = 'Rodada ' + m.matchday;
         if (m.stage === 'GROUP_STAGE' && !m.matchday) round = 'Fase de Grupos';
-        if (m.stage === 'LAST_32') round = 'Rodada de 32';
+        if (m.stage === 'LAST_32') round = '16 avos de Final';
         if (m.stage === 'LAST_16') round = 'Oitavas de Final';
         if (m.stage === 'QUARTER_FINALS') round = 'Quartas de Final';
         if (m.stage === 'SEMI_FINALS') round = 'Semifinal';
