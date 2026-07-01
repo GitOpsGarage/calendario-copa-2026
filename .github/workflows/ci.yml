@@ -34,3 +34,4 @@ jobs:
 
       - name: Check formatting
         run: npm run fmt
+
