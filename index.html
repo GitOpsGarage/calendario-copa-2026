@@ -26,15 +26,15 @@
     </header>
 
     <nav class="tabs">
-        <button class="tab active" data-tab="live">Ao Vivo</button>
-        <button class="tab" data-tab="calendar">Calendário</button>
-        <button class="tab" data-tab="team">Por Seleção</button>
+        <button type="button" class="tab active" data-tab="live">Ao Vivo</button>
+        <button type="button" class="tab" data-tab="calendar">Calendário</button>
+        <button type="button" class="tab" data-tab="team">Por Seleção</button>
     </nav>
 
     <main class="container">
         <!-- Seção Ao Vivo -->
         <section id="live" class="section active">
-            <div id="live-highlight" class="live-highlight-container" style="display:none;">
+            <div id="live-highlight" class="live-highlight-container">
                 <div class="live-highlight-header">
                     <span class="live-pulse"></span>
                     <h2>AO VIVO AGORA</h2>
@@ -51,7 +51,7 @@
                 <div class="loading">Carregando jogos...</div>
             </div>
 
-            <div class="section-header" style="margin-top: 2rem;">
+            <div class="section-header section-header-yesterday">
                 <h2>Resultados de Ontem</h2>
                 <span class="date-display" id="yesterday-date"></span>
             </div>
@@ -65,9 +65,9 @@
         <section id="calendar" class="section">
             <div class="calendar-widget">
                 <div class="cal-nav">
-                    <button class="cal-nav-btn" onclick="changeMonth(-1)">&lt;</button>
+                    <button type="button" class="cal-nav-btn" onclick="changeMonth(-1)">&lt;</button>
                     <span id="calendar-month-label" class="cal-month-label"></span>
-                    <button class="cal-nav-btn" onclick="changeMonth(1)">&gt;</button>
+                    <button type="button" class="cal-nav-btn" onclick="changeMonth(1)">&gt;</button>
                 </div>
                 <div id="calendar-grid" class="cal-grid"></div>
             </div>
@@ -88,7 +88,7 @@
                     <option value="">Selecione uma seleção</option>
                 </select>
             </div>
-            
+
             <div id="team-matches" class="matches-container">
                 <div class="loading">Selecione uma seleção</div>
             </div>

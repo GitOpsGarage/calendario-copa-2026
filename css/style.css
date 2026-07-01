@@ -127,6 +127,10 @@ body {
     margin-bottom: 1rem;
 }
 
+.section-header-yesterday {
+    margin-top: 2rem;
+}
+
 .section-header h2 {
     font-size: 1.25rem;
     font-weight: 700;
@@ -447,6 +451,7 @@ body {
 
 /* Live Highlight */
 .live-highlight-container {
+    display: none;
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, rgba(230, 57, 70, 0.15), rgba(230, 57, 70, 0.05));
     border: 1px solid rgba(230, 57, 70, 0.3);
