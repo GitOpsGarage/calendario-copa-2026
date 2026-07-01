@@ -7,178 +7,94 @@ var CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 var RATE_LIMIT_KEY = 'copa2026_ratelimit';
 var TZ_OFFSET = -3; // UTC-3 Brasil
 
-var FLAGS = {
-  Mexico: '🇲🇽',
-  'South Africa': '🇿🇦',
-  'South Korea': '🇰🇷',
-  'Czech Republic': '🇨🇿',
-  Argentina: '🇦🇷',
-  Canada: '🇨🇦',
-  Morocco: '🇲🇦',
-  Croatia: '🇭🇷',
-  Brazil: '🇧🇷',
-  Serbia: '🇷🇸',
-  Germany: '🇩🇪',
-  Japan: '🇯🇵',
-  Spain: '🇪🇸',
-  Colombia: '🇨🇴',
-  France: '🇫🇷',
-  Australia: '🇦🇺',
-  England: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  Italy: '🇮🇹',
-  Netherlands: '🇳🇱',
-  USA: '🇺🇸',
-  Portugal: '🇵🇹',
-  Belgium: '🇧🇪',
-  Uruguay: '🇺🇾',
-  Switzerland: '🇨🇭',
-  Ecuador: '🇪🇨',
-  Senegal: '🇸🇳',
-  Poland: '🇵🇱',
-  'Saudi Arabia': '🇸🇦',
-  Tunisia: '🇹🇳',
-  Denmark: '🇩🇰',
-  Wales: '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
-  Iran: '🇮🇷',
-  Qatar: '🇶🇦',
-  Cameroon: '🇨🇲',
-  Ghana: '🇬🇭',
-  'Costa Rica': '🇨🇷',
-  Peru: '🇵🇪',
-  Iceland: '🇮🇸',
-  Panama: '🇵🇦',
-  Egypt: '🇪🇬',
-  Nigeria: '🇳🇬',
-  'Korea Republic': '🇰🇷',
-  'Korea DPR': '🇰🇵',
-  Algeria: '🇩🇿',
-  Honduras: '🇭🇳',
-  Jamaica: '🇯🇲',
-  Paraguay: '🇵🇾',
-  Chile: '🇨🇱',
-  Bolivia: '🇧🇴',
-  Venezuela: '🇻🇪',
-  'China PR': '🇨🇳',
-  Iraq: '🇮🇶',
-  UAE: '🇦🇪',
-  Oman: '🇴🇲',
-  Thailand: '🇹🇭',
-  Vietnam: '🇻🇳',
-  Indonesia: '🇮🇩',
-  Malaysia: '🇲🇾',
-  Philippines: '🇵🇭',
-  'New Zealand': '🇳🇿',
-  Fiji: '🇫🇯',
-  'Solomon Islands': '🇸🇧',
-  'Papua New Guinea': '🇵🇬',
-  Guatemala: '🇬🇹',
-  'El Salvador': '🇸🇻',
-  'Trinidad and Tobago': '🇹🇹',
-  Curacao: '🇨🇼',
-  Curaçao: '🇨🇼',
-  Haiti: '🇭🇹',
-  Cuba: '🇨🇺',
-  Scotland: '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-  Turkey: '🇹🇷',
-  Norway: '🇳🇴',
-  Sweden: '🇸🇪',
-  'Ivory Coast': '🇨🇮',
-  Austria: '🇦🇹',
-  Jordan: '🇯🇴',
-  'Bosnia & Herzegovina': '🇧🇦',
-  Uzbekistan: '🇺🇿',
-  'DR Congo': '🇨🇩',
-  'Cape Verde': '🇨🇻',
-  'Al Ahly SC (EGY)': '🇪🇬',
-  'Inter Miami CF (USA)': '🇺🇸',
-  'Palmeiras (BRA)': '🇧🇷',
-  'FC Porto (POR)': '🇵🇹',
-  'Chelsea FC (ENG)': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-  'Paris Saint-Germain (FRA)': '🇫🇷',
-};
-
-var PT = {
-  Mexico: 'México',
-  'South Africa': 'África do Sul',
-  'South Korea': 'Coreia do Sul',
-  'Czech Republic': 'Tchéquia',
-  Argentina: 'Argentina',
-  Canada: 'Canadá',
-  Morocco: 'Marrocos',
-  Croatia: 'Croácia',
-  Brazil: 'Brasil',
-  Serbia: 'Sérvia',
-  Germany: 'Alemanha',
-  Japan: 'Japão',
-  Spain: 'Espanha',
-  Colombia: 'Colômbia',
-  France: 'França',
-  Australia: 'Austrália',
-  England: 'Inglaterra',
-  Italy: 'Itália',
-  Netherlands: 'Holanda',
-  USA: 'EUA',
-  Portugal: 'Portugal',
-  Belgium: 'Bélgica',
-  Uruguay: 'Uruguai',
-  Switzerland: 'Suíça',
-  Ecuador: 'Equador',
-  Senegal: 'Senegal',
-  Poland: 'Polônia',
-  'Saudi Arabia': 'Arábia Saudita',
-  Tunisia: 'Tunísia',
-  Denmark: 'Dinamarca',
-  Wales: 'País de Gales',
-  Iran: 'Irã',
-  Qatar: 'Catar',
-  Cameroon: 'Camarões',
-  Ghana: 'Gana',
-  'Costa Rica': 'Costa Rica',
-  Peru: 'Peru',
-  Iceland: 'Islândia',
-  Panama: 'Panamá',
-  Egypt: 'Egito',
-  Nigeria: 'Nigéria',
-  'Korea Republic': 'Coreia do Sul',
-  'Korea DPR': 'Coreia do Norte',
-  Algeria: 'Argélia',
-  Honduras: 'Honduras',
-  Jamaica: 'Jamaica',
-  Paraguay: 'Paraguai',
-  Chile: 'Chile',
-  Bolivia: 'Bolívia',
-  Venezuela: 'Venezuela',
-  'China PR': 'China',
-  Iraq: 'Iraque',
-  UAE: 'EAU',
-  Oman: 'Omã',
-  Thailand: 'Tailândia',
-  Vietnam: 'Vietnã',
-  Indonesia: 'Indonésia',
-  Malaysia: 'Malásia',
-  Philippines: 'Filipinas',
-  'New Zealand': 'Nova Zelândia',
-  Fiji: 'Fiji',
-  'Solomon Islands': 'Ilhas Salomão',
-  'Papua New Guinea': 'Papua-Nova Guiné',
-  Guatemala: 'Guatemala',
-  'El Salvador': 'El Salvador',
-  'Trinidad and Tobago': 'Trinidad e Tobago',
-  Curacao: 'Curaçao',
-  Curaçao: 'Curaçao',
-  Haiti: 'Haiti',
-  Cuba: 'Cuba',
-  Scotland: 'Escócia',
-  Turkey: 'Turquia',
-  Norway: 'Noruega',
-  Sweden: 'Suécia',
-  'Ivory Coast': 'Costa do Marfim',
-  Austria: 'Áustria',
-  Jordan: 'Jordânia',
-  'Bosnia & Herzegovina': 'Bósnia e Herzegovina',
-  Uzbekistan: 'Uzbequistão',
-  'DR Congo': 'RD Congo',
-  'Cape Verde': 'Cabo Verde',
+var TEAM_DATA = {
+  Mexico: { flag: '🇲🇽', pt: 'México' },
+  'South Africa': { flag: '🇿🇦', pt: 'África do Sul' },
+  'South Korea': { flag: '🇰🇷', pt: 'Coreia do Sul' },
+  'Czech Republic': { flag: '🇨🇿', pt: 'Tchéquia' },
+  Argentina: { flag: '🇦🇷', pt: 'Argentina' },
+  Canada: { flag: '🇨🇦', pt: 'Canadá' },
+  Morocco: { flag: '🇲🇦', pt: 'Marrocos' },
+  Croatia: { flag: '🇭🇷', pt: 'Croácia' },
+  Brazil: { flag: '🇧🇷', pt: 'Brasil' },
+  Serbia: { flag: '🇷🇸', pt: 'Sérvia' },
+  Germany: { flag: '🇩🇪', pt: 'Alemanha' },
+  Japan: { flag: '🇯🇵', pt: 'Japão' },
+  Spain: { flag: '🇪🇸', pt: 'Espanha' },
+  Colombia: { flag: '🇨🇴', pt: 'Colômbia' },
+  France: { flag: '🇫🇷', pt: 'França' },
+  Australia: { flag: '🇦🇺', pt: 'Austrália' },
+  England: { flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', pt: 'Inglaterra' },
+  Italy: { flag: '🇮🇹', pt: 'Itália' },
+  Netherlands: { flag: '🇳🇱', pt: 'Holanda' },
+  USA: { flag: '🇺🇸', pt: 'EUA' },
+  Portugal: { flag: '🇵🇹', pt: 'Portugal' },
+  Belgium: { flag: '🇧🇪', pt: 'Bélgica' },
+  Uruguay: { flag: '🇺🇾', pt: 'Uruguai' },
+  Switzerland: { flag: '🇨🇭', pt: 'Suíça' },
+  Ecuador: { flag: '🇪🇨', pt: 'Equador' },
+  Senegal: { flag: '🇸🇳', pt: 'Senegal' },
+  Poland: { flag: '🇵🇱', pt: 'Polônia' },
+  'Saudi Arabia': { flag: '🇸🇦', pt: 'Arábia Saudita' },
+  Tunisia: { flag: '🇹🇳', pt: 'Tunísia' },
+  Denmark: { flag: '🇩🇰', pt: 'Dinamarca' },
+  Wales: { flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', pt: 'País de Gales' },
+  Iran: { flag: '🇮🇷', pt: 'Irã' },
+  Qatar: { flag: '🇶🇦', pt: 'Catar' },
+  Cameroon: { flag: '🇨🇲', pt: 'Camarões' },
+  Ghana: { flag: '🇬🇭', pt: 'Gana' },
+  'Costa Rica': { flag: '🇨🇷', pt: 'Costa Rica' },
+  Peru: { flag: '🇵🇪', pt: 'Peru' },
+  Iceland: { flag: '🇮🇸', pt: 'Islândia' },
+  Panama: { flag: '🇵🇦', pt: 'Panamá' },
+  Egypt: { flag: '🇪🇬', pt: 'Egito' },
+  Nigeria: { flag: '🇳🇬', pt: 'Nigéria' },
+  'Korea Republic': { flag: '🇰🇷', pt: 'Coreia do Sul' },
+  'Korea DPR': { flag: '🇰🇵', pt: 'Coreia do Norte' },
+  Algeria: { flag: '🇩🇿', pt: 'Argélia' },
+  Honduras: { flag: '🇭🇳', pt: 'Honduras' },
+  Jamaica: { flag: '🇯🇲', pt: 'Jamaica' },
+  Paraguay: { flag: '🇵🇾', pt: 'Paraguai' },
+  Chile: { flag: '🇨🇱', pt: 'Chile' },
+  Bolivia: { flag: '🇧🇴', pt: 'Bolívia' },
+  Venezuela: { flag: '🇻🇪', pt: 'Venezuela' },
+  'China PR': { flag: '🇨🇳', pt: 'China' },
+  Iraq: { flag: '🇮🇶', pt: 'Iraque' },
+  UAE: { flag: '🇦🇪', pt: 'EAU' },
+  Oman: { flag: '🇴🇲', pt: 'Omã' },
+  Thailand: { flag: '🇹🇭', pt: 'Tailândia' },
+  Vietnam: { flag: '🇻🇳', pt: 'Vietnã' },
+  Indonesia: { flag: '🇮🇩', pt: 'Indonésia' },
+  Malaysia: { flag: '🇲🇾', pt: 'Malásia' },
+  Philippines: { flag: '🇵🇭', pt: 'Filipinas' },
+  'New Zealand': { flag: '🇳🇿', pt: 'Nova Zelândia' },
+  Fiji: { flag: '🇫🇯', pt: 'Fiji' },
+  'Solomon Islands': { flag: '🇸🇧', pt: 'Ilhas Salomão' },
+  'Papua New Guinea': { flag: '🇵🇬', pt: 'Papua-Nova Guiné' },
+  Guatemala: { flag: '🇬🇹', pt: 'Guatemala' },
+  'El Salvador': { flag: '🇸🇻', pt: 'El Salvador' },
+  'Trinidad and Tobago': { flag: '🇹🇹', pt: 'Trinidad e Tobago' },
+  Curacao: { flag: '🇨🇼', pt: 'Curaçao' },
+  Curaçao: { flag: '🇨🇼', pt: 'Curaçao' },
+  Haiti: { flag: '🇭🇹', pt: 'Haiti' },
+  Cuba: { flag: '🇨🇺', pt: 'Cuba' },
+  Scotland: { flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', pt: 'Escócia' },
+  Turkey: { flag: '🇹🇷', pt: 'Turquia' },
+  Norway: { flag: '🇳🇴', pt: 'Noruega' },
+  Sweden: { flag: '🇸🇪', pt: 'Suécia' },
+  'Ivory Coast': { flag: '🇨🇮', pt: 'Costa do Marfim' },
+  Austria: { flag: '🇦🇹', pt: 'Áustria' },
+  Jordan: { flag: '🇯🇴', pt: 'Jordânia' },
+  'Bosnia & Herzegovina': { flag: '🇧🇦', pt: 'Bósnia e Herzegovina' },
+  Uzbekistan: { flag: '🇺🇿', pt: 'Uzbequistão' },
+  'DR Congo': { flag: '🇨🇩', pt: 'RD Congo' },
+  'Cape Verde': { flag: '🇨🇻', pt: 'Cabo Verde' },
+  'Al Ahly SC (EGY)': { flag: '🇪🇬', pt: 'Al Ahly SC (EGY)' },
+  'Inter Miami CF (USA)': { flag: '🇺🇸', pt: 'Inter Miami CF (USA)' },
+  'Palmeiras (BRA)': { flag: '🇧🇷', pt: 'Palmeiras (BRA)' },
+  'FC Porto (POR)': { flag: '🇵🇹', pt: 'FC Porto (POR)' },
+  'Chelsea FC (ENG)': { flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', pt: 'Chelsea FC (ENG)' },
+  'Paris Saint-Germain (FRA)': { flag: '🇫🇷', pt: 'Paris Saint-Germain (FRA)' },
 };
 
 // Mapa de nomes ingles API football-data → nossos nomes
@@ -281,10 +197,12 @@ var calYear = currentDate.getFullYear();
 var teamPopulated = false;
 
 function pt(name) {
-  return PT[name] || name;
+  var info = TEAM_DATA[name];
+  return info ? info.pt : name;
 }
 function flag(name) {
-  return FLAGS[name] || '🏳️';
+  var info = TEAM_DATA[name];
+  return info ? info.flag : '🏳️';
 }
 
 function utcToBR(utcDateStr) {
@@ -818,26 +736,13 @@ function loadMatches() {
   fetchAPI();
 }
 
-function refreshInBackground() {
-  fetch(API_BASE)
-    .then(function (r) {
-      if (r.status === 429) {
-        markRateLimited();
-        return null;
-      }
-      if (!r.ok) throw new Error('API ' + r.status);
-      return r.json();
-    })
-    .then(function (data) {
-      if (!data) return;
-      allMatches = convertMatches(data);
-      setCache(allMatches);
-      renderAll();
-    })
-    .catch(function () {}); // silencioso, cache ja ta mostrando dados
+function processAPIData(data) {
+  allMatches = convertMatches(data);
+  setCache(allMatches);
+  renderAll();
 }
 
-function fetchAPI() {
+function fetchFromAPI(onError) {
   fetch(API_BASE)
     .then(function (r) {
       if (r.status === 429) {
@@ -847,15 +752,19 @@ function fetchAPI() {
       if (!r.ok) throw new Error('API ' + r.status);
       return r.json();
     })
-    .then(function (data) {
-      allMatches = convertMatches(data);
-      setCache(allMatches);
-      renderAll();
-    })
-    .catch(function (err) {
-      console.warn('football-data.org falhou, tentando fallback:', err);
-      loadFallback();
-    });
+    .then(processAPIData)
+    .catch(onError);
+}
+
+function refreshInBackground() {
+  fetchFromAPI(function () {});
+}
+
+function fetchAPI() {
+  fetchFromAPI(function (err) {
+    console.warn('football-data.org falhou, tentando fallback:', err);
+    loadFallback();
+  });
 }
 
 function loadFallback() {
