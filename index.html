@@ -1,105 +1,113 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Copa do Mundo 2026 - Ao Vivo</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-</head>
-<body>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <header class="header">
-        <div class="header-content">
-            <div class="logo">
-                <span class="logo-icon">⚽</span>
-                <h1>Copa 2026</h1>
-            </div>
-            <div class="header-info">
-                <span class="live-badge">🔴 AO VIVO</span>
-            </div>
+      <div class="header-content">
+        <div class="logo">
+          <span class="logo-icon">⚽</span>
+          <h1>Copa 2026</h1>
         </div>
+        <div class="header-info">
+          <span class="live-badge">🔴 AO VIVO</span>
+        </div>
+      </div>
     </header>
 
     <nav class="tabs">
-        <button class="tab active" data-tab="live">Ao Vivo</button>
-        <button class="tab" data-tab="calendar">Calendário</button>
-        <button class="tab" data-tab="team">Por Seleção</button>
+      <button type="button" class="tab active" data-tab="live">Ao Vivo</button>
+      <button type="button" class="tab" data-tab="calendar">Calendário</button>
+      <button type="button" class="tab" data-tab="team">Por Seleção</button>
     </nav>
 
     <main class="container">
-        <!-- Seção Ao Vivo -->
-        <section id="live" class="section active">
-            <div id="live-highlight" class="live-highlight-container" style="display:none;">
-                <div class="live-highlight-header">
-                    <span class="live-pulse"></span>
-                    <h2>AO VIVO AGORA</h2>
-                </div>
-                <div id="live-highlight-matches" class="matches-container"></div>
-            </div>
+      <!-- Seção Ao Vivo -->
+      <section id="live" class="section active">
+        <div id="live-highlight" class="live-highlight-container">
+          <div class="live-highlight-header">
+            <span class="live-pulse"></span>
+            <h2>AO VIVO AGORA</h2>
+          </div>
+          <div id="live-highlight-matches" class="matches-container"></div>
+        </div>
 
-            <div class="section-header">
-                <h2>Jogos de Hoje</h2>
-                <span class="date-display" id="today-date"></span>
-            </div>
+        <div class="section-header">
+          <h2>Jogos de Hoje</h2>
+          <span class="date-display" id="today-date"></span>
+        </div>
 
-            <div id="live-matches" class="matches-container">
-                <div class="loading">Carregando jogos...</div>
-            </div>
+        <div id="live-matches" class="matches-container">
+          <div class="loading">Carregando jogos...</div>
+        </div>
 
-            <div class="section-header" style="margin-top: 2rem;">
-                <h2>Resultados de Ontem</h2>
-                <span class="date-display" id="yesterday-date"></span>
-            </div>
+        <div class="section-header section-header-yesterday">
+          <h2>Resultados de Ontem</h2>
+          <span class="date-display" id="yesterday-date"></span>
+        </div>
 
-            <div id="yesterday-matches" class="matches-container">
-                <div class="loading">Carregando jogos...</div>
-            </div>
-        </section>
+        <div id="yesterday-matches" class="matches-container">
+          <div class="loading">Carregando jogos...</div>
+        </div>
+      </section>
 
-        <!-- Seção Calendário -->
-        <section id="calendar" class="section">
-            <div class="calendar-widget">
-                <div class="cal-nav">
-                    <button class="cal-nav-btn" onclick="changeMonth(-1)">&lt;</button>
-                    <span id="calendar-month-label" class="cal-month-label"></span>
-                    <button class="cal-nav-btn" onclick="changeMonth(1)">&gt;</button>
-                </div>
-                <div id="calendar-grid" class="cal-grid"></div>
-            </div>
+      <!-- Seção Calendário -->
+      <section id="calendar" class="section">
+        <div class="calendar-widget">
+          <div class="cal-nav">
+            <button type="button" class="cal-nav-btn" onclick="changeMonth(-1)">&lt;</button>
+            <span id="calendar-month-label" class="cal-month-label"></span>
+            <button type="button" class="cal-nav-btn" onclick="changeMonth(1)">&gt;</button>
+          </div>
+          <div id="calendar-grid" class="cal-grid"></div>
+        </div>
 
-            <div class="calendar-selected-date-header">
-                <span id="calendar-selected-date"></span>
-            </div>
+        <div class="calendar-selected-date-header">
+          <span id="calendar-selected-date"></span>
+        </div>
 
-            <div id="calendar-matches" class="matches-container">
-                <div class="loading">Selecione uma data</div>
-            </div>
-        </section>
+        <div id="calendar-matches" class="matches-container">
+          <div class="loading">Selecione uma data</div>
+        </div>
+      </section>
 
-        <!-- Seção Por Seleção -->
-        <section id="team" class="section">
-            <div class="team-selector">
-                <select id="team-select">
-                    <option value="">Selecione uma seleção</option>
-                </select>
-            </div>
-            
-            <div id="team-matches" class="matches-container">
-                <div class="loading">Selecione uma seleção</div>
-            </div>
-        </section>
+      <!-- Seção Por Seleção -->
+      <section id="team" class="section">
+        <div class="team-selector">
+          <select id="team-select">
+            <option value="">Selecione uma seleção</option>
+          </select>
+        </div>
+
+        <div id="team-matches" class="matches-container">
+          <div class="loading">Selecione uma seleção</div>
+        </div>
+      </section>
     </main>
 
     <footer class="footer">
-        <p>Dados: <a href="https://github.com/openfootball/worldcup.json" target="_blank">openfootball/worldcup.json</a></p>
-        <p>Copa do Mundo FIFA 2026 - EUA, Canadá e México</p>
+      <p>
+        Dados:
+        <a href="https://github.com/openfootball/worldcup.json" target="_blank"
+          >openfootball/worldcup.json</a
+        >
+      </p>
+      <p>Copa do Mundo FIFA 2026 - EUA, Canadá e México</p>
     </footer>
 
     <script src="js/app.js?v=13"></script>
-</body>
+  </body>
 </html>

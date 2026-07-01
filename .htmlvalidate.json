@@ -1,0 +1,9 @@
+{
+  "extends": ["html-validate:recommended"],
+  "rules": {
+    "void-style": ["warn", { "style": "selfclose" }],
+    "hidden-focusable": "off",
+    "no-redundant-for": "off",
+    "doctype-style": "off"
+  }
+}
