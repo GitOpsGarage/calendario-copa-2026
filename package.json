@@ -1,0 +1,13 @@
+{
+  "name": "calendario-copa-2026",
+  "private": true,
+  "scripts": {
+    "lint:html": "html-validate index.html",
+    "fmt": "prettier --check .",
+    "fmt:fix": "prettier --write ."
+  },
+  "devDependencies": {
+    "html-validate": "^9.5.0",
+    "prettier": "^3.5.3"
+  }
+}
