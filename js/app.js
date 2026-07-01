@@ -197,11 +197,11 @@ var calYear = currentDate.getFullYear();
 var teamPopulated = false;
 
 function pt(name) {
-  var info = TEAM_DATA[name];
+  let info = TEAM_DATA[name];
   return info ? info.pt : name;
 }
 function flag(name) {
-  var info = TEAM_DATA[name];
+  let info = TEAM_DATA[name];
   return info ? info.flag : '🏳️';
 }
 
